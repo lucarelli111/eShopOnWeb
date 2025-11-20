@@ -12,6 +12,7 @@ param managedIdentity bool = !empty(keyVaultName)
 param containerRegistry string
 param containerImage string
 param containerTag string = 'latest'
+param mainContainerName string = 'main'
 
 // App Service configuration
 param allowedOrigins array = []
@@ -34,7 +35,7 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
   properties: {
     serverFarmId: appServicePlanId
     siteConfig: {
-      linuxFxVersion: 'DOCKER|${containerRegistry}/${containerImage}:${containerTag}'
+      linuxFxVersion: 'sitecontainers'
       alwaysOn: alwaysOn
       ftpsState: ftpsState
       minTlsVersion: '1.2'
@@ -63,7 +64,6 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
         ASPNETCORE_ENVIRONMENT: 'Production'
         // Container settings
         DOCKER_REGISTRY_SERVER_URL: 'https://${containerRegistry}'
-        WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
         DOCKER_ENABLE_CI: 'true'
         // Health check configuration
         WEBSITE_HEALTHCHECK_MAXPINGFAILURES: '10'
@@ -85,6 +85,19 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
       detailedErrorMessages: { enabled: true }
       failedRequestsTracing: { enabled: true }
       httpLogs: { fileSystem: { enabled: true, retentionInDays: 1, retentionInMb: 35 } }
+    }
+    dependsOn: [
+      configAppSettings
+    ]
+  }
+
+  // Main application container
+  resource mainContainer 'sitecontainers' = {
+    name: mainContainerName
+    properties: {
+      image: '${containerRegistry}/${containerImage}:${containerTag}'
+      isMain: true
+      startUpCommand: appCommandLine
     }
     dependsOn: [
       configAppSettings

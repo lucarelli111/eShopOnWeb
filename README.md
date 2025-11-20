@@ -94,7 +94,7 @@ az container logs --name <container-name> --resource-group <resource-group> --fo
 **Cleanup:**
 ```bash
 # Delete the deployed application (keeps ACR for reuse)
-az group delete --name rg-eshop-<env-name> --yes --no-wait
+az group delete --name rg-eshop-1761853864 --yes --no-wait
 
 # Find your resource group name
 az group list --query "[?tags.\"azd-env-name\"].{Name:name, EnvName:tags.\"azd-env-name\"}" -o table
@@ -239,3 +239,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Instrumentation
 1. Datadog Azure ISV for Azure integration 
 2. WebApplication is https://docs.datadoghq.com/serverless/azure_app_service/linux_container?tab=net
+3. https://docs.datadoghq.com/logs/log_collection/csharp/?tab=serilog
+4. Make sure WEBSITES_ENABLE_APP_SERVICE_STORAGE is set to default (true)
+5. Inferred services: https://docs.datadoghq.com/tracing/services/inferred_services/?tab=agentv7600#set-up-inferred-services 

@@ -261,3 +261,5 @@ pub/
 
 .azure
 scripts/.aless-us3-sandbox
+.notes
+scripts/build-web-only.sh
