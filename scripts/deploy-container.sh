@@ -20,10 +20,6 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 LOCATION="${AZURE_LOCATION:-westus2}"
 ENV_NAME="${AZURE_ENV_NAME:-eshop-$(date +%s)}"
 
-# Datadog configuration
-DD_API_KEY="${DD_API_KEY:-}"
-DD_SITE="${DD_SITE:-us3.datadoghq.com}"
-
 echo "Deploying eShopOnWeb"
 echo "Repository: $REPO_ROOT"
 echo "ACR: ${ACR_NAME}.azurecr.io"
@@ -32,12 +28,6 @@ echo "API Image: ${API_IMAGE_NAME}:${IMAGE_TAG}"
 echo "Traffic Image: ${TRAFFIC_IMAGE_NAME}:${IMAGE_TAG}"
 echo "Location: $LOCATION"
 echo "Environment: $ENV_NAME"
-if [ -n "$DD_API_KEY" ]; then
-  echo "Datadog: Enabled (Site: $DD_SITE)"
-else
-  echo "❌  Please set DD_API_KEY."
-  exit 1
-fi
 echo ""
 
 # Verify ACR exists
