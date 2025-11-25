@@ -63,6 +63,12 @@ public class LoginModel : PageModel
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         ReturnUrl = returnUrl;
+        
+        // Prepopulate login credentials
+        Input = new InputModel
+        {
+            Email = "admin@microsoft.com"
+        };
     }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
