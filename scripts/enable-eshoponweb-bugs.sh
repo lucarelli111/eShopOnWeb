@@ -79,9 +79,6 @@ az webapp config appsettings set \
     DEBUG="true" \
   --output none
 
-echo "Restarting web app..."
-az webapp restart --name $WEB_APP_NAME --resource-group $RG_NAME --output none
-
 echo "Web app configured"
 echo ""
 echo "Done. App will restart automatically to apply settings."
