@@ -20,6 +20,9 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 LOCATION="${AZURE_LOCATION:-westus2}"
 ENV_NAME="${AZURE_ENV_NAME:-eshop-$(date +%s)}"
 
+# Performance issue simulation
+ENABLE_SLOW_BASKET="${ENABLE_SLOW_BASKET:-false}"
+
 echo "Deploying eShopOnWeb"
 echo "Repository: $REPO_ROOT"
 echo "ACR: ${ACR_NAME}.azurecr.io"
@@ -28,6 +31,7 @@ echo "API Image: ${API_IMAGE_NAME}:${IMAGE_TAG}"
 echo "Traffic Image: ${TRAFFIC_IMAGE_NAME}:${IMAGE_TAG}"
 echo "Location: $LOCATION"
 echo "Environment: $ENV_NAME"
+echo "Slow Basket: $ENABLE_SLOW_BASKET"
 echo ""
 
 # Verify ACR exists
@@ -80,6 +84,7 @@ az deployment sub create \
     principalId="$PRINCIPAL_ID" \
     sqlAdminPassword="SQL$(openssl rand -hex 12)!" \
     appUserPassword="APP$(openssl rand -hex 12)!" \
+    enableSlowBasket="$ENABLE_SLOW_BASKET" \
   --output none
 
 # Get app info

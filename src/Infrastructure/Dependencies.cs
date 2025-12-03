@@ -11,6 +11,9 @@ public static class Dependencies
 {
     public static void ConfigureLocalDatabaseContexts(this IServiceCollection services, IConfiguration configuration)
     {
+        // Register QueryMonitoringInterceptor as a service so it can get ILogger injected
+        services.AddScoped<QueryMonitoringInterceptor>();
+        
         bool useOnlyInMemoryDatabase = false;
         if (configuration["UseOnlyInMemoryDatabase"] != null)
         {
@@ -38,8 +41,9 @@ public static class Dependencies
                 //options.UseSqlServer(catalogConnectionString).AddMetronomeDbTracking(provider); ;
 
                 // but this works
-                options.UseSqlServer(catalogConnectionString)
-                    .AddInterceptors(provider.GetRequiredService<DbCallCountingInterceptor>());
+            options.UseSqlServer(catalogConnectionString)
+                .AddInterceptors(provider.GetRequiredService<DbCallCountingInterceptor>())
+                .AddInterceptors(provider.GetRequiredService<QueryMonitoringInterceptor>());
             });
 
             // Add Identity DbContext

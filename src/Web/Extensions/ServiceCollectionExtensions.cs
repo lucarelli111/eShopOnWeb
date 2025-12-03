@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
 {
     public static void AddDatabaseContexts(this IServiceCollection services, IWebHostEnvironment environment, ConfigurationManager configuration)
     {
+        // Register QueryMonitoringInterceptor as a service so it can get ILogger injected
+        services.AddScoped<QueryMonitoringInterceptor>();
+        
         if (environment.IsDevelopment() || environment.IsDocker())
         {
             // Configure SQL Server (local)
@@ -32,7 +35,8 @@ public static class ServiceCollectionExtensions
             {
                 var connectionString = configuration[configuration["AZURE_SQL_CATALOG_CONNECTION_STRING_KEY"] ?? ""];
                 options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())
-                .AddInterceptors(provider.GetRequiredService<DbCallCountingInterceptor>());
+                .AddInterceptors(provider.GetRequiredService<DbCallCountingInterceptor>())
+                .AddInterceptors(provider.GetRequiredService<QueryMonitoringInterceptor>());
             });
             services.AddDbContext<AppIdentityDbContext>((provider,options) =>
             {

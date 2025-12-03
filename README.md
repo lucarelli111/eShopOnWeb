@@ -155,6 +155,58 @@ docker-compose up
 
 ---
 
+## Simulating Performance Issues
+
+### Slow Basket Query (WAITFOR DELAY)
+
+Adds 3-second SQL delay to basket queries. Simulates slow database queries.
+
+**Enable:**
+```bash
+# Azure App Service
+az webapp config appsettings set \
+  --name <web-app-name> \
+  --resource-group <resource-group> \
+  --settings ENABLE_SLOW_BASKET=true
+
+# Docker
+ENABLE_SLOW_BASKET=true docker-compose restart eshopwebmvc
+```
+
+**Behavior:** 50% of `/Basket` page loads take 3+ seconds (SQL delay).
+
+### Connection Pool Exhaustion (Checkout)
+
+Leaks database connections permanently. Requires app restart to fix.
+
+**Enable:**
+```bash
+# Azure App Service
+az webapp config appsettings set \
+  --name <web-app-name> \
+  --resource-group <resource-group> \
+  --settings ENABLE_CHECKOUT_EXHAUSTION=true
+
+# Docker
+ENABLE_CHECKOUT_EXHAUSTION=true docker-compose restart eshopwebmvc
+```
+
+**Behavior:** Gradually exhausts connection pool over ~30 seconds when using checkout. Only fix is app restart.
+
+**Disable Both:**
+```bash
+# Azure
+az webapp config appsettings delete \
+  --name <web-app-name> \
+  --resource-group <resource-group> \
+  --setting-names ENABLE_SLOW_BASKET ENABLE_CHECKOUT_EXHAUSTION
+
+# Docker
+ENABLE_SLOW_BASKET=false ENABLE_CHECKOUT_EXHAUSTION=false docker-compose restart eshopwebmvc
+```
+
+---
+
 ### Run Locally with .NET CLI
 
 **Requirements:** .NET 9.0 SDK, SQL Server (or use in-memory database)

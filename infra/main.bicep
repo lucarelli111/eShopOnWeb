@@ -31,6 +31,10 @@ param identityDatabaseServerName string = ''
 param appServicePlanName string = ''
 param keyVaultName string = ''
 
+// Performance issue simulation flags
+param enableSlowBasket string = 'false'
+param debug string = 'false'
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -72,6 +76,8 @@ module web './core/host/appservice.bicep' = {
       AZURE_SQL_IDENTITY_CONNECTION_STRING_KEY: 'AZURE-SQL-IDENTITY-CONNECTION-STRING'
       AZURE_KEY_VAULT_ENDPOINT: keyVault.outputs.endpoint
       baseUrls__apiBase: '${api.outputs.uri}/api/'
+      ENABLE_SLOW_BASKET: enableSlowBasket
+      DEBUG: debug
     }
   }
 }
@@ -90,10 +96,13 @@ module api './core/host/appservice.bicep' = {
     containerTag: containerTag
     mainContainerName: 'publicapi-sidecar'
     tags: union(tags, { 'azd-service-name': 'api' })
+    healthCheckPath: ''
     appSettings: {
       AZURE_SQL_CATALOG_CONNECTION_STRING_KEY: 'AZURE-SQL-CATALOG-CONNECTION-STRING'
       AZURE_SQL_IDENTITY_CONNECTION_STRING_KEY: 'AZURE-SQL-IDENTITY-CONNECTION-STRING'
       AZURE_KEY_VAULT_ENDPOINT: keyVault.outputs.endpoint
+      baseUrls__apiBase: 'https://${!empty(apiServiceName) ? apiServiceName : '${abbrs.webSitesAppService}api-${resourceToken}'}.azurewebsites.net/api/'
+      baseUrls__webBase: 'https://${!empty(webServiceName) ? webServiceName : '${abbrs.webSitesAppService}web-${resourceToken}'}.azurewebsites.net/'
     }
   }
 }
@@ -171,7 +180,7 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
     kind: 'linux'
     reserved: true  // Required for Linux
     sku: {
-      name: 'B1' 
+      name: 'B2' 
     }
   }
 }

@@ -98,6 +98,7 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
       image: '${containerRegistry}/${containerImage}:${containerTag}'
       isMain: true
       startUpCommand: appCommandLine
+      targetPort: '8080'
     }
     dependsOn: [
       configAppSettings

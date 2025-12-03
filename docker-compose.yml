@@ -12,6 +12,8 @@ services:
       - DD_SITE=${DD_SITE:-us3.datadoghq.com}
       - DD_API_KEY=${DD_API_KEY:-}
       - DD_ENV=${DD_ENV:-local}
+      - ENABLE_SLOW_BASKET=${ENABLE_SLOW_BASKET:-false}
+      - DEBUG=${DEBUG:-false}
     depends_on:
       sqlserver:
         condition: service_healthy

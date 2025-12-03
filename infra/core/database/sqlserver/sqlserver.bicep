@@ -2,7 +2,6 @@ param name string
 param location string = resourceGroup().location
 param tags object = {}
 
-param appUser string = 'appUser'
 param databaseName string
 param keyVaultName string
 param sqlAdmin string = 'sqlAdmin'
@@ -70,6 +69,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: keyVaultName
 }
 
-var connectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName}; Database=${sqlServer::database.name}; User=${sqlAdmin}'
+var connectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName}; Database=${sqlServer::database.name}; User=${sqlAdmin}; Max Pool Size=10; Command Timeout=10'
 output connectionStringKey string = connectionStringKey
 output databaseName string = sqlServer::database.name
