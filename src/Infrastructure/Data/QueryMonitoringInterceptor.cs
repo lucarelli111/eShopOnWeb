@@ -9,13 +9,22 @@ namespace Microsoft.eShopWeb.Infrastructure.Data;
 
 public class QueryMonitoringInterceptor : DbCommandInterceptor
 {
-    private static readonly Random _random = new Random();
     private static int _basketQueryCount = 0; // Track basket queries for progressive slowdown
+    private static bool _initialized = false;
     private readonly ILogger<QueryMonitoringInterceptor> _logger;
 
     public QueryMonitoringInterceptor(ILogger<QueryMonitoringInterceptor> logger)
     {
         _logger = logger;
+        
+        // Only log initialization once
+        if (!_initialized)
+        {
+            _initialized = true;
+            _logger.LogInformation("QueryMonitoringInterceptor initialized. DEBUG={Debug}, ENABLE_SLOW_BASKET={SlowBasket}", 
+                Environment.GetEnvironmentVariable("DEBUG") ?? "not set",
+                Environment.GetEnvironmentVariable("ENABLE_SLOW_BASKET") ?? "not set");
+        }
     }
     
     private bool IsDebugEnabled()
@@ -29,7 +38,7 @@ public class QueryMonitoringInterceptor : DbCommandInterceptor
     {
         if (IsDebugEnabled())
         {
-            _logger.LogDebug("{Message}", message);
+            _logger.LogInformation("{Message}", message);
         }
     }
     
@@ -55,15 +64,34 @@ public class QueryMonitoringInterceptor : DbCommandInterceptor
         
         DebugLog($"BasketItems INSERT check: contains={containsBasketItemsInsert}, slowBasketEnabled={isSlowBasketEnabled}");
         
-        // Progressive slowdown with randomization
+        // Progressive slowdown with dynamic probability
         if (isSlowBasketEnabled && containsBasketItemsInsert)
         {
             DebugLog("Detected BasketItems INSERT!");
             
-            // 75% chance to apply slowdown (3 out of 4 requests)
-            var randomValue = _random.Next(0, 4);
+            // Peek at what the delay would be (without incrementing yet)
+            var nextCount = _basketQueryCount + 1;
+            var potentialDelay = Math.Min(nextCount * 0.5, 15.0);
             
-            if (randomValue < 3) // 0, 1, 2 = slow (75%), 3 = fast (25%)
+            // Before 10s: 75% slow, 25% fast
+            // After 10s: 50% slow, 50% fast
+            var randomValue = Random.Shared.Next(0, 4); // Thread-safe random
+            bool shouldSlow;
+            
+            DebugLog($"Counter={_basketQueryCount}, potentialDelay={potentialDelay:F1}s, randomValue={randomValue}");
+            
+            if (potentialDelay < 10.0)
+            {
+                shouldSlow = randomValue < 3; // 75% slow, 25% fast
+                DebugLog($"Pre-timeout phase: {(shouldSlow ? "slow (75%)" : "fast (25%)")}");
+            }
+            else
+            {
+                shouldSlow = randomValue < 2; // 50% slow, 50% fast
+                DebugLog($"Timeout phase: {(shouldSlow ? "slow (50%)" : "fast (50%)")}");
+            }
+            
+            if (shouldSlow)
             {
                 // Increment counter to track progression
                 var currentCount = Interlocked.Increment(ref _basketQueryCount);
@@ -83,7 +111,7 @@ public class QueryMonitoringInterceptor : DbCommandInterceptor
             }
             else
             {
-                DebugLog("Fast path - no delay (25% of requests)");
+                DebugLog("Fast path - no delay");
             }
         }
         
